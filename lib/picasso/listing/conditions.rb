@@ -65,6 +65,7 @@ end
   'or_condition',
   'true_condition',
   'greater_than_or_equal_condition',
+  'like_condition'
 ].each do |r|
   require_relative "conditions/#{r}"
 end
