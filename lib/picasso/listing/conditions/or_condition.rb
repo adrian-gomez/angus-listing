@@ -12,7 +12,7 @@ module Picasso
             Listing::Conditions.build_condition(option)
           end
 
-          conditions.map(&:to_sql).join(' OR ')
+          "(#{conditions.map(&:to_sql).join(' OR ')})"
         end
 
         def self.operator

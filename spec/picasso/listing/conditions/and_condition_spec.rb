@@ -31,7 +31,7 @@ describe Picasso::Listing::Conditions::AndCondition do
         true_condition = Picasso::Listing::Conditions::TrueCondition.new
         Picasso::Listing::Conditions.stub(:build_condition).and_return(true_condition)
 
-        condition.to_sql.should eq(true_condition.to_sql)
+        condition.to_sql.should eq("(#{true_condition.to_sql})")
       end
     end
   end
