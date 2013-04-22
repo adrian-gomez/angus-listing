@@ -16,6 +16,7 @@ module Picasso
           :like
         end
       end
+
     end
   end
 end

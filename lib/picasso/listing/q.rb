@@ -8,6 +8,7 @@ module Picasso
 
       attr_reader :filter
       attr_reader :paging
+      attr_reader :select
       attr_reader :sorting
       attr_reader :values
 
@@ -21,6 +22,7 @@ module Picasso
         @filter = QFilter.new(options[:filter] || options['filter'] || [], columns)
         @paging = QPaging.new(options[:paging] || options['paging'] || {})
         @sorting = QSorting.new(options[:sorting] || options['sorting'] || [], columns)
+        @select = QSelect.new(options[:select] || options['select'] || [])
         @values = options[:values] || options['values'] || []
         @filter.validate!
         @sorting.validate!
@@ -40,6 +42,7 @@ module Picasso
         {
           :filter => self.filter_options,
           :paging => self.paging_options,
+          :select => self.select_options,
           :sorting => self.sorting_options,
           :values => @values,
         }
@@ -50,6 +53,13 @@ module Picasso
       # @return [Array] Array of filter options
       def filter_options
         @filter.options
+      end
+
+      # Returns Q Select options.
+      #
+      # @return [Array] Array of select options
+      def select_options
+        @select.options
       end
 
       # Returns Q Paging options.
@@ -205,6 +215,70 @@ module Picasso
         Integer(s)
       rescue
         default
+      end
+    end
+
+    # Used to select which parts of the dataset will be queried.
+    #
+    # select options examples:
+    #
+    #   - Only retrieve result list
+    #   [:list]
+    #
+    #   - Retrieve result list and elements count
+    #   [:list, :count]
+    #
+    #   - Retrieve the total_amount calculation
+    #   [{:calculations => [:total_amount]}]
+    #
+    #   - Retrieve list, elements count, and calculations
+    #   []
+    class QSelect
+      def initialize(options = nil)
+        @options = options || []
+
+        calculations = @options.find do |option|
+          option.is_a?(Hash) &&
+            (option.include?(:calculations) || option.include?('calculations'))
+        end || {}
+
+        @calculations = calculations.values.first || []
+      end
+
+      # Indicates whether the given calculation will be retrieved or not.
+      #
+      # @param [String] name Calculation name
+      #
+      # @return [Boolean]
+      def calculation?(name)
+        return true if @options.empty?
+
+        @calculations.include?(name.to_sym) || @calculations.include?(name.to_s)
+      end
+
+      # Indicates whether the elements count will be retrieved or not.
+      #
+      # @return [Boolean]
+      def count?
+        return true if @options.empty?
+
+        @options.include?(:count) || @options.include?('count')
+      end
+
+      # Indicates whether the elements list will be retrieved or not.
+      #
+      # @return [Boolean]
+      def list?
+        return true if @options.empty?
+
+        @options.include?(:list) || @options.include?('list')
+      end
+
+      # Returns current select options.
+      #
+      # @return [Array]
+      def options
+        @options
       end
     end
 

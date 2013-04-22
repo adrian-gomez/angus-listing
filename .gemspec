@@ -16,6 +16,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency('ci_reporter', '1.7.0')
   s.add_development_dependency('rake')
 
-  s.add_development_dependency('activerecord-jdbcsqlite3-adapter', '1.2.2.1') if RUBY_ENGINE == 'jruby'
-  s.add_development_dependency('sqlite3', '1.3.6') if RUBY_ENGINE == 'ruby'
+  s.add_development_dependency('activerecord-jdbcsqlite3-adapter', '1.2.9') if RUBY_ENGINE == 'jruby'
+  s.add_development_dependency('sqlite3', '1.3.7') if RUBY_ENGINE == 'ruby'
 end

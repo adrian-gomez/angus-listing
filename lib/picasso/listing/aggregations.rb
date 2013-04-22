@@ -7,7 +7,7 @@ module Picasso
     #
     # Each aggregation is defined as a class that has the following methods:
     #
-    #  - .funtion Returns a Symbol that identifies the operator in a filter conditions array.
+    #  - .function Returns a Symbol that identifies the operator in a filter conditions array.
     #
     #  - #default Default value when there's no result for the aggregation.
     #

@@ -8,6 +8,7 @@ describe Picasso::Listing::Q do
     {
       :filter => [:true],
       :paging => {:page => 1, :per_page => 10},
+      :select => [:list],
       :sorting => [:id, :asc],
       :values => [true],
     }
@@ -60,6 +61,14 @@ describe Picasso::Listing::Q do
       q = Picasso::Listing::Q.new(q_options, columns)
 
       q.paging_options.should eq(q_options[:paging])
+    end
+  end
+
+  describe '#select_options' do
+    it 'returns the select options' do
+      q = Picasso::Listing::Q.new(q_options, columns)
+
+      q.select_options.should eq(q_options[:select])
     end
   end
 
@@ -156,6 +165,81 @@ describe Picasso::Listing::QPaging do
       q_options = q_paging.options
 
       q_options.should include(:page => 1)
+    end
+  end
+end
+
+describe Picasso::Listing::QSelect do
+
+  describe '#calculation?' do
+    subject(:q_select) do
+      Picasso::Listing::QSelect.new([
+        {:calculations => [:total_amount]}
+      ])
+    end
+
+    context 'when the given calculation is present' do
+      it 'is true' do
+        q_select.calculation?(:total_amount).should be
+      end
+    end
+
+    context 'when the given calculation is not present' do
+      it 'is false' do
+        q_select.calculation?(:average).should_not be
+      end
+    end
+  end
+
+  describe '#count?' do
+    context 'when count is present' do
+      subject do
+        Picasso::Listing::QSelect.new([:count])
+      end
+
+      its(:count?) { should be }
+    end
+
+    context 'when count is not present' do
+      subject do
+        Picasso::Listing::QSelect.new([:list])
+      end
+
+      its(:count?) { should_not be }
+    end
+
+    context 'when no configuration' do
+      subject do
+        Picasso::Listing::QSelect.new([])
+      end
+
+      its(:count?) { should be }
+    end
+  end
+
+  describe '#list?' do
+    context 'when list is present' do
+      subject do
+        Picasso::Listing::QSelect.new([:list])
+      end
+
+      its(:list?) { should be }
+    end
+
+    context 'when list is not present' do
+      subject do
+        Picasso::Listing::QSelect.new([:count])
+      end
+
+      its(:list?) { should_not be }
+    end
+
+    context 'when no configuration' do
+      subject do
+        Picasso::Listing::QSelect.new([])
+      end
+
+      its(:list?) { should be }
     end
   end
 end

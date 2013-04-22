@@ -30,7 +30,6 @@ module Picasso
       # @raise [NameError] If the operator is unknown
       def self.build_condition(options)
         return TrueCondition.new if options.empty?
-
         operator = options.first.to_sym
         operands_options = options[1, options.length - 1]
 
@@ -64,8 +63,8 @@ end
   'not_condition',
   'or_condition',
   'true_condition',
-  'greater_than_or_equal_condition',
-  'like_condition'
+  'like_condition',
+  'greater_than_or_equal_condition'
 ].each do |r|
   require_relative "conditions/#{r}"
 end

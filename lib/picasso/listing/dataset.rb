@@ -49,9 +49,18 @@ module Picasso
         calculations = {}
 
         aggregates.each do |name, aggregate|
-          aggregate_relation = relation.select(aggregate.sql_select).group(aggregate.sql_group_by)
 
-          calculations[name] = aggregate.extract_from(aggregate_relation)
+          value = if @q.select.calculation?(name)
+            aggregate_relation = relation.select(aggregate.sql_select)
+                                         .group(aggregate.sql_group_by)
+                                         .except(:includes)
+
+            aggregate.extract_from(aggregate_relation)
+          else
+            nil
+          end
+
+          calculations[name] = value
         end
 
         calculations
@@ -66,7 +75,7 @@ module Picasso
       def count(relation = nil)
         relation ||= apply_filter(self.relation)
 
-        relation.count
+        relation.except(:includes).count
       end
 
       # Returns a list of records after applying filtering, sorting and paging.
@@ -87,8 +96,15 @@ module Picasso
       # @return [Listing::Report] report
       def report
         filtered = apply_filter(self.relation)
-        count = self.count(filtered)
-        list = self.list(filtered)
+
+        count = self.count(filtered) if @q.select.count?
+
+        list = if @q.select.list?
+          self.list(filtered)
+        else
+          []
+        end
+
         calculations = self.calculations(filtered)
         Listing::Report.new(
           @q.options,
