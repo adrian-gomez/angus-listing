@@ -17,13 +17,26 @@ describe Picasso::Listing::Report do
   end
 
   describe '#page_count' do
-    it 'returns the total pages count' do
-      count = 12
-      q = {:paging => { :per_page => 5 }}
+    let(:count) { 12 }
 
+    let(:q) do
+      { :paging => { :per_page => 5 } }
+    end
+
+    it 'returns the total pages count' do
       report = Picasso::Listing::Report.new(q, :list, :calculations, count)
 
       report.page_count.should eq(3)
+    end
+
+    context 'when count is nil' do
+      let(:count) { nil }
+
+      it 'returns nil' do
+        report = Picasso::Listing::Report.new(q, :list, :calculations, count)
+
+        report.page_count.should be_nil
+      end
     end
   end
 end

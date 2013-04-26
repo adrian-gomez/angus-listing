@@ -22,9 +22,11 @@ module Picasso
         @count = count
       end
 
-      # Return the total count of pages for the filtering that produced the current list.
+      # Returns the total count of pages for the filtering that produced the current list.
       def page_count
-        (@count.to_f / @q[:paging][:per_page]).ceil
+        if @count
+          (@count.to_f / @q[:paging][:per_page]).ceil
+        end
       end
     end
 
