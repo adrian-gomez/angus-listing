@@ -1,4 +1,6 @@
+/spec/reports/
+/coverage/
+
 *.log
-coverage/*
 
 Gemfile.lock

@@ -1,4 +1,5 @@
 Gem::Specification.new do |s|
+
   s.name            = 'bancard-picasso-listing'
   s.version         = '0.0.1'
   s.platform        = Gem::Platform::RUBY
@@ -12,10 +13,14 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency('rspec', '~> 2.12')
   s.add_development_dependency('rack-test', '0.6.1')
-  s.add_development_dependency('simplecov', '0.6.4')
-  s.add_development_dependency('ci_reporter', '1.7.0')
   s.add_development_dependency('rake')
+
+  s.add_development_dependency('simplecov', '0.7.1')
+  s.add_development_dependency('simplecov-rcov', '0.2.3')
+  s.add_development_dependency('simplecov-rcov-text', '0.0.2')
+  s.add_development_dependency('ci_reporter', '1.7.0')
 
   s.add_development_dependency('activerecord-jdbcsqlite3-adapter', '1.2.9') if RUBY_ENGINE == 'jruby'
   s.add_development_dependency('sqlite3', '1.3.7') if RUBY_ENGINE == 'ruby'
+
 end
