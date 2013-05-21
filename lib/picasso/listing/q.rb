@@ -1,4 +1,5 @@
 require_relative 'conditions'
+require_relative 'utils'
 
 module Picasso
   module Listing
@@ -18,10 +19,11 @@ module Picasso
       # @option options [Array] :sorting Sorting options, see QSorting
       # @option options [Array] :values Values for dataset filtering
       # @param [Array<Symbol>] columns Columns allowed to be filter and sorted by
-      def initialize(options = {}, columns = [])
-        @filter = QFilter.new(options[:filter] || options['filter'] || [], columns)
+      # @param [String] ns Namespace for columns
+      def initialize(options = {}, columns = [], ns = nil)
+        @filter = QFilter.new(options[:filter] || options['filter'] || [], columns, ns)
         @paging = QPaging.new(options[:paging] || options['paging'] || {})
-        @sorting = QSorting.new(options[:sorting] || options['sorting'] || [], columns)
+        @sorting = QSorting.new(options[:sorting] || options['sorting'] || [], columns, ns)
         @select = QSelect.new(options[:select] || options['select'] || [])
         @values = options[:values] || options['values'] || []
         @filter.validate!
@@ -111,9 +113,10 @@ module Picasso
       #
       # @param [Array] options Filter options
       # @param [Array<#to_s>] Columns allowed to be filtered by
-      def initialize(options, columns)
+      # @param [String] ns Namespace for columns
+      def initialize(options, columns, ns)
         @unescaped_options = options
-        @options = escape_names(options, columns)
+        @options = escape_names(options, columns, ns)
         @columns = columns
         @condition = Listing::Conditions.build_condition(@options)
       end
@@ -156,11 +159,18 @@ module Picasso
       private
 
       # Escapes column names, enclosing them with backticks ( ` )
-      def escape_names(options, columns)
+      #
+      # @param [Array] options Filter options, some of them include column names
+      # @param [Array<#to_s>] Columns allowed to be filtered by
+      # @param [String] Namespace to be used when a column is not prepended with a table name
+      #
+      # @return [Array]
+      def escape_names(options, columns, ns)
         options.map do |option|
           if option.kind_of?(Array)
-            escape_names(option, columns)
-          elsif columns.include?(option)
+            escape_names(option, columns, ns)
+          elsif columns.include?(option.to_sym)
+            option = Utils.add_namespace(option, ns)
             option.to_s.split('.').map{ |o| "`#{o}`"}.join('.')
           else
             option
@@ -168,7 +178,6 @@ module Picasso
         end
       end
     end
-
 
     # Adds pagination behavior.
     class QPaging
@@ -304,9 +313,10 @@ module Picasso
 
       # @param [Array] options Sorting options
       # @param [Array<Symbol> Columns allowed to be sorted by
-      def initialize(options, columns)
+      # @param [String] ns Namespace for columns
+      def initialize(options, columns, ns)
         @unescaped_options = options
-        @options = escape_names(options, columns)
+        @options = escape_names(options, columns, ns)
         @columns = columns
       end
 
@@ -388,15 +398,17 @@ module Picasso
       private
 
       # Escapes column names, enclosing them with `
-      def escape_names(options, columns)
-        options = options.map do |option|
+      def escape_names(options, columns, ns)
+        options.map do |option|
           if columns.include?(option.to_sym)
+            option = Utils.add_namespace(option, ns)
             "`#{option.to_s.gsub('.','`.`')}`"
           else
             option
           end
         end
       end
+
     end
   end
 end

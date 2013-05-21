@@ -34,7 +34,7 @@ module Picasso
       # param [Hash] q Q options, see Picasso::Listing::Q.new
       def initialize(q = nil)
         q ||= {}
-        @q = Q.new(q, columns)
+        @q = Q.new(q, columns, self.relation.table_name)
       end
 
       # Returns the calculations for this dataset.

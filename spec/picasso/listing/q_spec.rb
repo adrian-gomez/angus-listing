@@ -92,11 +92,12 @@ end
 describe Picasso::Listing::QFilter do
 
   let (:options) { [:true] }
-  let (:columns) { [:id ] }
+  let (:columns) { [:id, :'transactions.product_code' ] }
+  let(:ns) { 'ns' }
 
   describe '#options' do
     it 'returns the options for instantiating the same QFilter' do
-      q_filter = Picasso::Listing::QFilter.new(options, columns)
+      q_filter = Picasso::Listing::QFilter.new(options, columns, ns)
 
       q_filter.options.should eq(options)
     end
@@ -104,22 +105,40 @@ describe Picasso::Listing::QFilter do
 
   describe '#to_sql' do
     it 'returns a SQL string according to the current filter' do
-      q_filter = Picasso::Listing::QFilter.new(options, columns)
+      q_filter = Picasso::Listing::QFilter.new(options, columns, ns)
 
       q_filter.to_sql.should eq('1 = 1')
+    end
+
+    context 'when column is not namespaced' do
+      it 'escapes and adds the namespace to the columns' do
+        options = [:eq, :id, '?']
+        q_filter = Picasso::Listing::QFilter.new(options, columns, ns)
+
+        q_filter.to_sql.should match(/`ns`.`id`/)
+      end
+    end
+
+    context 'when column is namespaced' do
+      it 'honours the current namespace' do
+        options = [:eq, 'transactions.product_code', '?']
+        q_filter = Picasso::Listing::QFilter.new(options, columns, ns)
+
+        q_filter.to_sql.should match(/`transactions`.`product_code`/)
+      end
     end
   end
 
   describe '#validate!' do
     it 'is true when the current filter is a valid one' do
-      q_filter = Picasso::Listing::QFilter.new(options, columns)
+      q_filter = Picasso::Listing::QFilter.new(options, columns, ns)
 
       q_filter.validate!.should be
     end
 
     it 'raises an error when the current filter is not a valid one' do
       options = [:eq, :unknown_column, '?']
-      q_filter = Picasso::Listing::QFilter.new(options, columns)
+      q_filter = Picasso::Listing::QFilter.new(options, columns, ns)
 
       expect {
         q_filter.validate!
@@ -245,6 +264,9 @@ describe Picasso::Listing::QSelect do
 end
 
 describe Picasso::Listing::QSorting do
+
+  let(:ns) { 'ns' }
+
   describe '.sort_direction?' do
     it 'is true when :asc' do
       result = Picasso::Listing::QSorting.sort_direction?(:asc)
@@ -270,7 +292,7 @@ describe Picasso::Listing::QSorting do
     let(:options) { [:id, :asc] }
 
     it 'returns the options for instantiating the same QFilter' do
-      q_sorting = Picasso::Listing::QSorting.new(options, columns)
+      q_sorting = Picasso::Listing::QSorting.new(options, columns, ns)
 
       q_sorting.options.should eq(options)
     end
@@ -280,33 +302,44 @@ describe Picasso::Listing::QSorting do
     let(:columns) { [:id] }
 
     it 'is true when valid' do
-      q_sorting = Picasso::Listing::QSorting.new([:id, :description, :asc, :amount, :desc], columns)
+      q_sorting = Picasso::Listing::QSorting.new([:id, :description, :asc, :amount, :desc], columns, ns)
 
       q_sorting.should be_valid_sorting_sequence
     end
 
     it 'is false when the first item is a sorting direction' do
-      q_sorting = Picasso::Listing::QSorting.new([:desc, :id, :description, :asc, :amount, :desc], columns)
+      q_sorting = Picasso::Listing::QSorting.new([:desc, :id, :description, :asc, :amount, :desc], columns, ns)
 
       q_sorting.should_not be_valid_sorting_sequence
     end
 
     it 'is false when the there are two consecutive sorting directions' do
-      q_sorting = Picasso::Listing::QSorting.new([:id, :description, :asc, :desc, :amount, :desc], columns)
+      q_sorting = Picasso::Listing::QSorting.new([:id, :description, :asc, :desc, :amount, :desc], columns, ns)
 
       q_sorting.should_not be_valid_sorting_sequence
     end
   end
 
   describe '#to_sql' do
-    let(:columns) { [:id, :description, :amount] }
+    let(:columns) { [:id, :description, :amount, :'transactions.product_code'] }
     let(:options) { [:id, :description, :asc, :amount, :desc] }
 
     it 'returns a sorting condition' do
-      q_sorting = Picasso::Listing::QSorting.new(options, columns)
-      sql = '`id`, `description` ASC, `amount` DESC'
+      q_sorting = Picasso::Listing::QSorting.new(options, columns, ns)
+      sql = "`ns`.`id`, `ns`.`description` ASC, `ns`.`amount` DESC"
 
       q_sorting.to_sql.should eq(sql)
+    end
+
+    context 'when column is namespaced' do
+      let(:options) { ['transactions.product_code', :asc] }
+
+      it 'honours the current namespace' do
+        q_sorting = Picasso::Listing::QSorting.new(options, columns, ns)
+        sql = "`transactions`.`product_code` ASC"
+
+        q_sorting.to_sql.should eq(sql)
+      end
     end
   end
 end
