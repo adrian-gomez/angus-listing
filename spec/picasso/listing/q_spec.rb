@@ -91,9 +91,35 @@ end
 
 describe Picasso::Listing::QFilter do
 
-  let (:options) { [:true] }
-  let (:columns) { [:id, :'transactions.product_code' ] }
+  let(:options) { [:true] }
+  let(:columns) { [:id, :'transactions.product_code' ] }
   let(:ns) { 'ns' }
+
+  describe '#affected_tables' do
+
+    let(:options) { ['and', ['eq', 'card_brands.name', '?'], ['eq', 'ticket_number', '?']] }
+
+    context 'when the columns used in the options are included in the accepted columns' do
+      let(:columns) { [:id, :'card_brands.name', :ticket_number ] }
+
+      it 'returns the affected tables for given options' do
+        q_filter = Picasso::Listing::QFilter.new(options, columns, ns)
+
+        q_filter.affected_tables.should eq([:card_brands])
+      end
+    end
+
+    context 'when the columns used in the options are not included in the accepted columns' do
+      let(:columns) { [:id, :ticket_number ] }
+
+      it 'does not return the affected tables for given options' do
+        q_filter = Picasso::Listing::QFilter.new(options, columns, ns)
+
+        q_filter.affected_tables.should eq([])
+      end
+    end
+
+  end
 
   describe '#options' do
     it 'returns the options for instantiating the same QFilter' do
@@ -326,7 +352,7 @@ describe Picasso::Listing::QSorting do
 
     it 'returns a sorting condition' do
       q_sorting = Picasso::Listing::QSorting.new(options, columns, ns)
-      sql = "`ns`.`id`, `ns`.`description` ASC, `ns`.`amount` DESC"
+      sql = '`ns`.`id`, `ns`.`description` ASC, `ns`.`amount` DESC'
 
       q_sorting.to_sql.should eq(sql)
     end
@@ -336,7 +362,7 @@ describe Picasso::Listing::QSorting do
 
       it 'honours the current namespace' do
         q_sorting = Picasso::Listing::QSorting.new(options, columns, ns)
-        sql = "`transactions`.`product_code` ASC"
+        sql = '`transactions`.`product_code` ASC'
 
         q_sorting.to_sql.should eq(sql)
       end

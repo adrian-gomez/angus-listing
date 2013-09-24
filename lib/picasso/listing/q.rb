@@ -107,6 +107,8 @@ module Picasso
     # Please, look at {Picasso::Listing::Conditions} for further reference.
     class QFilter
 
+      attr_reader :affected_tables
+
       # Creates a filter object
       #
       # options is an array composed by conditions and other options arrays.
@@ -117,6 +119,7 @@ module Picasso
       def initialize(options, columns, ns)
         @unescaped_options = options
         @options = escape_names(options, columns, ns)
+        @affected_tables = get_affected_tables(options, columns)
         @columns = columns
         @condition = Listing::Conditions.build_condition(@options)
       end
@@ -145,7 +148,7 @@ module Picasso
         options = @unescaped_options.flatten
         invalid_options = options.reject do |option|
           option == '?' ||
-          @columns.include?(option.to_sym) ||
+            @columns.include?(option.to_sym) ||
             Listing::Conditions.operand?(option)
         end
 
@@ -158,11 +161,27 @@ module Picasso
 
       private
 
+      # Returns the tables that are going to be used for the given options
+      #
+      # @param [Array] options Filter options, some of them include column names.
+      # @param [Array<#to_s>] columns allowed to be filtered by.
+      #
+      # @return [Array<Symbol>]
+      def get_affected_tables(options, columns)
+        options.map do |option|
+          if option.kind_of?(Array)
+            get_affected_tables(option, columns)
+          elsif columns.include?(option.to_sym) && option =~ /(.*)\./
+            $1.to_sym
+          end
+        end.flatten.compact
+      end
+
       # Escapes column names, enclosing them with backticks ( ` )
       #
-      # @param [Array] options Filter options, some of them include column names
-      # @param [Array<#to_s>] Columns allowed to be filtered by
-      # @param [String] Namespace to be used when a column is not prepended with a table name
+      # @param [Array] options Filter options, some of them include column names.
+      # @param [Array<#to_s>] columns Allowed to be filtered by.
+      # @param [String] ns Namespace to be used when a column is not prepended with a table name.
       #
       # @return [Array]
       def escape_names(options, columns, ns)

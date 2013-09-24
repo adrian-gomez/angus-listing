@@ -64,7 +64,7 @@ describe Picasso::Listing::DataSet do
   around(:each) do |example|
     Specs::Picasso::Listing::Foo.connection.transaction do
       example.run
-      raise ActiveRecord::Rollback, "Rollback the changes made during the example."
+      raise ActiveRecord::Rollback, 'Rollback the changes made during the example.'
     end
   end
 
@@ -148,6 +148,43 @@ describe Picasso::Listing::DataSet do
       end
 
     end
+  end
+
+  describe '#filter_includes_values' do
+
+    subject(:ds) { ds_class.new }
+
+    let(:affected_tables) { [:brands, :devices] }
+
+    context 'when the includes values are just an array' do
+      let(:includes_values) { [:device, :commerce_branch] }
+
+      it 'returns only includes for the affected tabled' do
+        ds.filter_includes_values(includes_values, affected_tables).should eq([:device])
+      end
+    end
+
+    context 'when the includes values contains a hash' do
+      let(:includes_values) { [:device, :commerce_branch, {:product=>[:brand]}] }
+
+      context 'and just the hash key is affected' do
+        let(:affected_tables) { [:products, :devices] }
+
+        it 'returns just the hash key in the includes values' do
+          ds.filter_includes_values(includes_values, affected_tables).should eq([:device, :product])
+        end
+      end
+
+      context 'and any of the hash values are affected' do
+        let(:affected_tables) { [:brands, :devices] }
+
+        it 'returns the complete hash in the includes values' do
+          ds.filter_includes_values(includes_values,
+                                    affected_tables).should eq([:device, {:product=>[:brand]}])
+        end
+      end
+    end
+
   end
 
   describe '#list' do

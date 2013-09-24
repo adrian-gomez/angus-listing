@@ -15,7 +15,7 @@ describe Picasso::Listing::Conditions::LikeCondition do
   describe '#to_sql' do
     it 'returns a like condition' do
       condition = Picasso::Listing::Conditions::LikeCondition.new('name','%test%')
-      sql = "name LIKE %test%"
+      sql = 'name LIKE %test%'
 
       condition.to_sql.should eq(sql)
     end
