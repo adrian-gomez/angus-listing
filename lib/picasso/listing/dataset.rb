@@ -48,7 +48,9 @@ module Picasso
 
         calculations = {}
         affected_tables = @q.filter.affected_tables
-        filtered_includes_values = filter_includes_values(relation.includes_values, affected_tables)
+
+        filtered_includes_values = filter_related_values(relation.includes_values, affected_tables)
+        filtered_joins_values = filter_related_values(relation.joins_values, affected_tables)
 
         aggregates.each do |name, aggregate|
           value = if @q.select.calculation?(name)
@@ -56,6 +58,9 @@ module Picasso
                                          .group(aggregate.sql_group_by)
                                          .except(:includes)
                                          .includes(filtered_includes_values)
+                                         .except(:joins)
+                                         .joins(filtered_joins_values)
+
 
             aggregate.extract_from(aggregate_relation)
           else
@@ -77,35 +82,37 @@ module Picasso
       def count(relation = nil)
         relation ||= apply_filter(self.relation)
         affected_tables = @q.filter.affected_tables
-        filtered_includes_values = filter_includes_values(relation.includes_values, affected_tables)
+        filtered_includes_values = filter_related_values(relation.includes_values, affected_tables)
+        filtered_joins_values = filter_related_values(relation.joins_values, affected_tables)
 
-        relation.except(:includes).includes(filtered_includes_values).count
+        relation.except(:includes).includes(filtered_includes_values)
+                .except(:joins).joins(filtered_joins_values).count
       end
 
-      # Returns the includes values that are only used for the affected tables.
+      # Returns the relationships values that are only used for the affected tables.
       #
-      # @param [Array<#to_s>] includes_values All the includes values.
+      # @param [Array<#to_s>] related_values All the includes values.
       # @param [Array<#to_s>] affected_tables The affected tables for the query.
       #
       # @return [Array<Symbol>]
-      def filter_includes_values(includes_values, affected_tables)
+      def filter_related_values(related_values, affected_tables)
         filtered_includes_values = []
-        if includes_values.is_a?(Array)
-          includes_values.each do |includes_value|
-            filtered_includes_values << filter_includes_values(includes_value, affected_tables)
+        if related_values.is_a?(Array)
+          related_values.each do |includes_value|
+            filtered_includes_values << filter_related_values(includes_value, affected_tables)
           end
-        elsif includes_values.is_a?(Hash)
-          includes_values.each do |includes_value, includes_nested_value|
+        elsif related_values.is_a?(Hash)
+          related_values.each do |includes_value, includes_nested_value|
             if affected_tables.include?(includes_value.to_s.pluralize.to_sym) &&
-                 filter_includes_values(includes_nested_value, affected_tables).empty?
+                 filter_related_values(includes_nested_value, affected_tables).empty?
               filtered_includes_values << includes_value
             elsif affected_tables.include?(includes_value.to_s.pluralize.to_sym) ||
-                    filter_includes_values(includes_nested_value, affected_tables).any?
+                    filter_related_values(includes_nested_value, affected_tables).any?
               filtered_includes_values << { includes_value => includes_nested_value }
             end
           end
-        elsif affected_tables.include?(includes_values.to_s.pluralize.to_sym)
-          filtered_includes_values << includes_values
+        elsif affected_tables.include?(related_values.to_s.pluralize.to_sym)
+          filtered_includes_values << related_values
         end
         filtered_includes_values.flatten.compact
       end

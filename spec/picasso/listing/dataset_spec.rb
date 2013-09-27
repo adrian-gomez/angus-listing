@@ -150,7 +150,7 @@ describe Picasso::Listing::DataSet do
     end
   end
 
-  describe '#filter_includes_values' do
+  describe '#filter_related_values' do
 
     subject(:ds) { ds_class.new }
 
@@ -160,7 +160,7 @@ describe Picasso::Listing::DataSet do
       let(:includes_values) { [:device, :commerce_branch] }
 
       it 'returns only includes for the affected tabled' do
-        ds.filter_includes_values(includes_values, affected_tables).should eq([:device])
+        ds.filter_related_values(includes_values, affected_tables).should eq([:device])
       end
     end
 
@@ -171,7 +171,7 @@ describe Picasso::Listing::DataSet do
         let(:affected_tables) { [:products, :devices] }
 
         it 'returns just the hash key in the includes values' do
-          ds.filter_includes_values(includes_values, affected_tables).should eq([:device, :product])
+          ds.filter_related_values(includes_values, affected_tables).should eq([:device, :product])
         end
       end
 
@@ -179,8 +179,8 @@ describe Picasso::Listing::DataSet do
         let(:affected_tables) { [:brands, :devices] }
 
         it 'returns the complete hash in the includes values' do
-          ds.filter_includes_values(includes_values,
-                                    affected_tables).should eq([:device, {:product=>[:brand]}])
+          ds.filter_related_values(includes_values,
+                                   affected_tables).should eq([:device, {:product=>[:brand]}])
         end
       end
     end
