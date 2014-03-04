@@ -203,7 +203,7 @@ module Picasso
       attr_reader :page
       attr_reader :per_page
 
-      DEFAULT_PAGE = 1
+      DEFAULT_PAGE = 1.0
       DEFAULT_PER_PAGE = 10
 
       # @param [Hash<Symbol, Integer>,Hash<String, Integer>] options Paging options
@@ -212,10 +212,10 @@ module Picasso
       def initialize(options = {})
         page = options[:page] || options['page']
         per_page = options[:per_page] || options['per_page']
-        @page = parse_integer(page, DEFAULT_PAGE)
+        @page = parse_float(page, DEFAULT_PAGE)
         @page = 1 if @page == 0
 
-        @per_page = parse_integer(per_page, DEFAULT_PER_PAGE)
+        @per_page = parse_float(per_page, DEFAULT_PER_PAGE)
       end
 
       # Returns current paging options.
@@ -235,12 +235,12 @@ module Picasso
       private
       # Parses an integer, if there is any parse error it then returns 'default'.
       #
-      # @param [String] s Integer as a string
-      # @param [Integer] default Default value to return if there is a parsing error
+      # @param n Number as a string
+      # @param [Float] default Default value to return if there is a parsing error
       #
-      # @return [Integer] Parsed integer
-      def parse_integer(s, default)
-        Integer(s)
+      # @return [Float] Parsed integer
+      def parse_float(n, default)
+        Float(n)
       rescue
         default
       end
