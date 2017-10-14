@@ -1,6 +1,7 @@
 require 'bundler/setup'
 
 require 'rspec'
+require 'rspec/its'
 
 require 'simplecov'
 SimpleCov.start
